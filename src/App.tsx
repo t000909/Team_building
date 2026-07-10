@@ -155,7 +155,7 @@ export default function App() {
             
             {/* Branding Column */}
             <div className="md:col-span-5 space-y-6 text-left">
-              <Logo className="invert brightness-0" />
+              <Logo variant="footer" />
               <p className="text-slate-400 font-sans font-light text-sm leading-relaxed max-w-sm pt-2">
                 Empowering businesses with modern software systems, reliable engineering consulting, and robust strategic IT governance.
               </p>
