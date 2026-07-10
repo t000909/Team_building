@@ -1,6 +1,5 @@
 import React from 'react';
-import logoUrl from '../logo.png';
-import logoFooterUrl from '../logo_footer.png';
+import { logoBase64 } from '../logo-base64';
 
 export default function Logo({ 
   className = "",
@@ -13,9 +12,9 @@ export default function Logo({
   return (
     <div className={`flex items-center select-none ${className}`}>
       <img
-        src={isFooter ? logoFooterUrl : logoUrl}
+        src={logoBase64}
         alt="Team Building Logo"
-        className="h-8 md:h-10 w-auto object-contain"
+        className={`h-8 md:h-10 w-auto object-contain ${isFooter ? "invert brightness-0" : ""}`}
         referrerPolicy="no-referrer"
       />
     </div>
