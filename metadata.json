@@ -1,0 +1,6 @@
+{
+  "name": "TeamBuilding",
+  "description": "Premium IT consulting and custom software development services by TeamBuilding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
