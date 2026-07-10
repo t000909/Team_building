@@ -86,7 +86,7 @@ export default function AboutView({ onNavigate }: AboutViewProps) {
             </p>
           </motion.div>
           <motion.div variants={itemVariants} className="lg:col-span-6">
-            <div className="w-full aspect-[16/10] bg-gradient-to-tr from-slate-50 to-blue-50/20 rounded-xl border border-slate-200 p-6 flex items-center justify-center relative overflow-hidden">
+            <div className="w-full aspect-auto lg:aspect-[16/10] py-8 lg:py-0 bg-gradient-to-tr from-slate-50 to-blue-50/20 rounded-xl border border-slate-200 p-4 sm:p-6 flex items-center justify-center relative overflow-hidden">
               {/* Symbolic decorative vectors */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-300/10 rounded-full blur-2xl" />
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-slate-300/10 rounded-full blur-2xl" />
