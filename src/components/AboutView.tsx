@@ -60,23 +60,14 @@ export default function AboutView({ onNavigate }: AboutViewProps) {
       variants={containerVariants}
       className="space-y-24 pb-16 pt-8"
     >
-      {/* Title Header */}
-      <section className="max-w-7xl mx-auto px-6 text-left space-y-6">
-        <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
-          We strive for excellence
-        </motion.h1>
-        <motion.p variants={itemVariants} className="text-xl text-slate-600 font-sans font-light leading-relaxed max-w-4xl">
-          Our mission at <span className="font-semibold text-slate-900">TeamBuilding</span> is to empower businesses by providing innovative, reliable, and strategic IT solutions that drive growth and success.
-        </motion.p>
-      </section>
 
       {/* Two Column Section */}
-      <section className="bg-slate-50/50 py-16 border-y border-slate-200">
+       <section className="max-w-7xl mx-auto px-6 text-left space-y-6">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center text-left">
           <motion.div variants={itemVariants} className="lg:col-span-6 space-y-6">
-            <h2 className="text-3xl font-extrabold font-sans text-slate-900 tracking-tight">
-              The only IT solution you need
-            </h2>
+          <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
+          We strive for excellence
+        </motion.h1>
             <div className="w-12 h-1 bg-blue-600 rounded-full" />
             <p className="text-slate-600 font-sans font-light leading-relaxed">
               Our mission at <span className="font-medium text-slate-900">TeamBuilding</span> is to empower businesses by providing innovative, reliable, and strategic IT solutions that drive growth and success. We align technology with your core business values, creating platforms that allow your business to scale naturally and confidently.

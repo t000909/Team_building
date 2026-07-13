@@ -202,14 +202,17 @@ export default function App() {
               </h4>
               <ul className="space-y-4 font-sans text-sm text-slate-400">
                 <li className="flex flex-col gap-1">
-                  <span className="text-slate-500 text-xs uppercase font-semibold">Registered Address</span>
-                  <span className="leading-relaxed">
-                    Meydan Grandstand | 6th floor | Meydan Road | Nad Al Sheba | Dubai | U.A.E.
-                  </span>
+                  <span className="text-slate-300 font-semibold">TEAM BUILDING URUGUAY SAS</span>
                 </li>
                 <li className="flex flex-col gap-1">
-                  <span className="text-slate-500 text-xs uppercase font-semibold">License Registration</span>
-                  <span>License Number: 2421102.01</span>
+                  <span className="text-slate-500 text-xs uppercase font-semibold">RUC</span>
+                  <span>219443250018</span>
+                </li>
+                <li className="flex flex-col gap-1">
+                  <span className="text-slate-500 text-xs uppercase font-semibold">Address</span>
+                  <span className="leading-relaxed">
+                    Avenida General Fructuoso Rivera number 6666, Montevideo, Uruguay
+                  </span>
                 </li>
               </ul>
             </div>

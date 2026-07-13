@@ -95,40 +95,14 @@ export default function ServicesView({ onNavigate }: ServicesViewProps) {
       variants={containerVariants}
       className="space-y-24 pb-16 pt-8"
     >
-      {/* Page Title */}
-      <section className="max-w-7xl mx-auto px-6 text-left space-y-6">
-        <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
-          Empowering Your Business with Expert IT Solutions
-        </motion.h1>
-        <motion.p variants={itemVariants} className="text-xl text-slate-600 font-sans font-light leading-relaxed max-w-4xl">
-          From custom software development to strategic IT consulting, our expert team delivers innovative, reliable solutions that drive success.
-        </motion.p>
-        <motion.div variants={itemVariants} className="flex gap-4 pt-2">
-          <button
-            onClick={() => onNavigate(Page.About)}
-            className="inline-flex items-center bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-sans font-semibold text-sm px-5 py-3 rounded-lg transition duration-200 cursor-pointer"
-          >
-            About us
-          </button>
-          <button
-            onClick={() => onNavigate(Page.Contact)}
-            className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-sans font-semibold text-sm px-5 py-3 rounded-lg transition duration-200 shadow-sm cursor-pointer"
-          >
-            Get in touch
-          </button>
-        </motion.div>
-      </section>
 
       {/* Detailed Services Grid */}
-      <section className="bg-slate-50/50 py-20 border-y border-slate-200">
+      <section className="max-w-7xl mx-auto px-6 text-left space-y-6">
         <div className="max-w-7xl mx-auto px-6 space-y-16">
-          <motion.div variants={itemVariants} className="text-left max-w-2xl space-y-4">
-            <h2 className="text-3xl font-extrabold font-sans tracking-tight text-slate-900">
-              Comprehensive Services Tailored to Your Needs
-            </h2>
-            <div className="w-12 h-1 bg-blue-600 rounded-full" />
-          </motion.div>
-
+         <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
+          Comprehensive Services Tailored to Your Needs
+        </motion.h1>
+        <div className="w-12 h-1 bg-blue-600 rounded-full" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {services.map((ser, idx) => {
               const IconComp = ser.icon;

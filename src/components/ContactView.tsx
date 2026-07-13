@@ -54,18 +54,15 @@ export default function ContactView() {
       variants={containerVariants}
       className="space-y-16 pb-16 pt-8"
     >
-      {/* Page Header */}
+
+      {/* Main Contact Content */}
       <section className="max-w-7xl mx-auto px-6 text-left space-y-6">
-        <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
+      <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
           We’d love to hear from you
         </motion.h1>
         <motion.p variants={itemVariants} className="text-xl text-slate-600 font-sans font-light leading-relaxed max-w-4xl">
           Whether you are looking for custom development, IT strategic insights, or enterprise system integrations, our team is ready to assist.
         </motion.p>
-      </section>
-
-      {/* Main Contact Content */}
-      <section className="bg-slate-50/50 py-16 border-y border-slate-200">
         <div className="max-w-3xl mx-auto px-6 text-left">
           
           {/* Portal Message Form */}
