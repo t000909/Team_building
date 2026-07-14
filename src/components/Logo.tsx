@@ -1,6 +1,4 @@
 import React from 'react';
-import logoUrl from '../logo.png';
-import logoFooterUrl from '../logo_footer.png';
 
 export default function Logo({ 
   className = "",
@@ -10,7 +8,10 @@ export default function Logo({
   variant?: "header" | "footer";
 }) {
   const isFooter = variant === "footer";
-  const currentLogo = isFooter ? logoFooterUrl : logoUrl;
+  
+  // Dynamically resolve fully qualified URL from index.html links to handle nested subpaths or subdirectory hosting
+  const preloadEl = document.getElementById(isFooter ? 'logo-footer-preload' : 'logo-preload') as HTMLLinkElement | null;
+  const currentLogo = preloadEl ? preloadEl.href : (isFooter ? "./logo_footer.png" : "./logo.png");
 
   return (
     <div className={`flex items-center select-none ${className}`}>
