@@ -211,7 +211,7 @@ export default function App() {
                 <li className="flex flex-col gap-1">
                   <span className="text-slate-500 text-xs uppercase font-semibold">Address</span>
                   <span className="leading-relaxed">
-                    Avenida General Fructuoso Rivera number 6666, Montevideo, Uruguay
+                    Costa Rica 1651, Office No. 7, Montevideo, Uruguay
                   </span>
                 </li>
               </ul>
