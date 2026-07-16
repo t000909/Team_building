@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Check, AlertCircle } from 'lucide-react';
+import { Send, Check, AlertCircle, MapPin, Building2, Mail } from 'lucide-react';
 
 export default function ContactView() {
   const [formData, setFormData] = useState({
@@ -29,7 +29,7 @@ export default function ContactView() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
       setSubmitStatus('error');
@@ -39,12 +39,30 @@ export default function ContactView() {
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
-    // Simulate standard submission
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        console.error('Contact submit error:', result.error || 'Unknown error');
+        setSubmitStatus('error');
+      }
+    } catch (err) {
+      console.error('Network or server error during submit:', err);
+      setSubmitStatus('error');
+    } finally {
       setIsSubmitting(false);
-      setSubmitStatus('success');
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 1500);
+    }
   };
 
   return (
@@ -56,17 +74,20 @@ export default function ContactView() {
     >
 
       {/* Main Contact Content */}
-      <section className="max-w-7xl mx-auto px-6 text-left space-y-6">
-      <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
-          We’d love to hear from you
-        </motion.h1>
-        <motion.p variants={itemVariants} className="text-xl text-slate-600 font-sans font-light leading-relaxed max-w-4xl">
-          Whether you are looking for custom development, IT strategic insights, or enterprise system integrations, our team is ready to assist.
-        </motion.p>
-        <div className="max-w-3xl mx-auto px-6 text-left">
+      <section className="max-w-7xl mx-auto px-6 text-left space-y-10">
+        <div className="space-y-4">
+          <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 font-sans">
+            We’d love to hear from you
+          </motion.h1>
+          <motion.p variants={itemVariants} className="text-xl text-slate-600 font-sans font-light leading-relaxed max-w-4xl">
+            Whether you are looking for custom development, IT strategic insights, or enterprise system integrations, our team is ready to assist.
+          </motion.p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-4">
           
           {/* Portal Message Form */}
-          <motion.div variants={itemVariants} className="bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <motion.div variants={itemVariants} className="lg:col-span-7 bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm space-y-6">
             <h2 className="text-2xl font-bold text-slate-900 font-sans tracking-tight">
               Get in touch
             </h2>
@@ -93,7 +114,7 @@ export default function ContactView() {
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="type"
+                    type="email"
                     id="email"
                     required
                     value={formData.email}
@@ -170,6 +191,55 @@ export default function ContactView() {
                 <Send className={`w-4 h-4 transition-transform ${isSubmitting ? 'translate-x-1 translate-y-[-2px]' : 'group-hover:translate-x-0.5'}`} />
               </button>
             </form>
+          </motion.div>
+
+          {/* Contact & Corporate Info Column */}
+          <motion.div variants={itemVariants} className="lg:col-span-5 space-y-8 bg-slate-50 p-8 md:p-10 rounded-2xl border border-slate-200 h-full">
+            <div className="space-y-3">
+              <h3 className="text-xl font-bold text-slate-900 font-sans tracking-tight">
+                Corporate Headquarters
+              </h3>
+              <p className="text-sm text-slate-500 font-sans font-light leading-relaxed">
+                We're based in Montevideo, Uruguay. Feel free to contact us or send an inquiry.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-slate-900 font-sans">Company Name</h4>
+                  <p className="text-sm text-slate-600 font-sans font-light">TEAM BUILDING URUGUAY SAS</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-slate-900 font-sans">Address</h4>
+                  <p className="text-sm text-slate-600 font-sans font-light leading-relaxed">
+                    Avenida General Fructuoso Rivera number 6666,<br />
+                    Montevideo, Uruguay
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-slate-900 font-sans">Email Contacts</h4>
+                  <p className="text-sm text-slate-600 font-sans font-light">
+                  <a href="mailto:finance@teambuilding.biz" className="text-blue-600 hover:underline">finance@teambuilding.biz</a>
+                  </p>
+                </div>
+              </div>
+            </div>
           </motion.div>
           
         </div>
