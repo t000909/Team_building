@@ -71,7 +71,19 @@ async function startServer() {
           console.log(`[Contact Form] Google Sheets Web App Response: ${responseText}`);
           
           if (response.ok) {
-            sheetsSaved = true;
+            try {
+              const resultJson = JSON.parse(responseText);
+              if (resultJson && resultJson.status === 'error') {
+                console.warn(`[Contact Form] Google Sheets Web App returned an internal script error: ${resultJson.message || 'Unknown error'}`);
+                sheetsSaved = false;
+                devMessage = `Google Sheets script error: ${resultJson.message || 'Unknown error'}`;
+              } else {
+                sheetsSaved = true;
+              }
+            } catch (jsonErr) {
+              // Not a JSON response, but response.ok is true; default to saved
+              sheetsSaved = true;
+            }
           } else {
             console.warn(`[Contact Form] Google Sheets Web App returned non-ok status: ${response.status}`);
           }
@@ -146,7 +158,7 @@ ${message}
         await transporter.sendMail(mailOptions);
         mailSent = true;
         console.log(`[Contact Form] Email successfully sent to ${recipientEmail}`);
-      } else if (!sheetsSaved) {
+      } else if (!sheetsSaved && !sheetsWebappUrl) {
         // If neither SMTP nor Google Sheets Web App is configured, log details to console as fallback
         console.warn('[Contact Form] Neither SMTP credentials nor GOOGLE_SHEETS_WEBAPP_URL is configured in .env yet.');
         console.log('--- EMAIL CONTENT PREVIEW ---');
