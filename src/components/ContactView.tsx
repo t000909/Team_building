@@ -201,11 +201,9 @@ export default function ContactView() {
                       Message Sent Successfully!
                     </h3>
                     <p className="text-slate-600 font-sans font-light leading-relaxed max-w-md mx-auto text-base">
-                      Thanks for your inquiry! We've successfully received your details and our team will contact you soon.
+                      Thanks for your inquiry! We've successfully received your message and our team will contact you soon.
                     </p>
-                    <p className="text-xs text-slate-400 font-sans font-light max-w-sm mx-auto">
-                      A confirmation has been logged to our systems. We typically respond within 1 business day.
-                    </p>
+                    
                   </div>
                   <div className="pt-4">
                     <button
@@ -324,10 +322,10 @@ export default function ContactView() {
           <motion.div variants={itemVariants} className="lg:col-span-5 space-y-8 bg-slate-50 p-8 md:p-10 rounded-2xl border border-slate-200 h-full">
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-slate-900 font-sans tracking-tight">
-                Corporate Headquarters
+                Corporate Office 
               </h3>
               <p className="text-sm text-slate-500 font-sans font-light leading-relaxed">
-                We're based in Montevideo, Uruguay. Feel free to contact us or send an inquiry.
+              
               </p>
             </div>
 
@@ -337,7 +335,7 @@ export default function ContactView() {
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-semibold text-slate-900 font-sans">Company Name</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 font-sans">Company</h4>
                   <p className="text-sm text-slate-600 font-sans font-light">TEAM BUILDING URUGUAY SAS</p>
                 </div>
               </div>
@@ -360,7 +358,7 @@ export default function ContactView() {
                   <Mail className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-semibold text-slate-900 font-sans">Email Contacts</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 font-sans">Email</h4>
                   <p className="text-sm text-slate-600 font-sans font-light">
                   <a href="mailto:finance@teambuilding.biz" className="text-blue-600 hover:underline">finance@teambuilding.biz</a>
                   </p>
