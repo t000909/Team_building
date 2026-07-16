@@ -61,9 +61,9 @@ export default function ContactView() {
         setErrorMessage(result.error || 'The server was unable to process your request. Please try again.');
         setSubmitStatus('error');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Network or server error during submit:', err);
-      setErrorMessage('A network error occurred. Please verify your connection and try again.');
+      setErrorMessage(err?.message ? `Error: ${err.message}` : 'A network error occurred. Please verify your connection and try again.');
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
