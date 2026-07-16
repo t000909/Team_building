@@ -11,6 +11,7 @@ export default function ContactView() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -32,12 +33,14 @@ export default function ContactView() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
+      setErrorMessage('Please fill in all required fields before submitting.');
       setSubmitStatus('error');
       return;
     }
 
     setIsSubmitting(true);
     setSubmitStatus('idle');
+    setErrorMessage('');
 
     try {
       const response = await fetch('/api/contact', {
@@ -55,10 +58,12 @@ export default function ContactView() {
         setFormData({ name: '', email: '', subject: '', message: '' });
       } else {
         console.error('Contact submit error:', result.error || 'Unknown error');
+        setErrorMessage(result.error || 'The server was unable to process your request. Please try again.');
         setSubmitStatus('error');
       }
     } catch (err) {
       console.error('Network or server error during submit:', err);
+      setErrorMessage('A network error occurred. Please verify your connection and try again.');
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -176,7 +181,7 @@ export default function ContactView() {
                     className="p-4 bg-red-50 border border-red-100 text-red-800 rounded-lg text-sm flex items-center gap-3 font-sans"
                   >
                     <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                    <span>Please fill in all required fields before submitting.</span>
+                    <span>{errorMessage || 'An error occurred. Please try again.'}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
