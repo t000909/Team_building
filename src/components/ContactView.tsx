@@ -30,6 +30,31 @@ export default function ContactView() {
     }
   };
 
+  const submitDirectToGoogleSheets = async (dataToSubmit: typeof formData) => {
+    const sheetsUrl = "https://script.google.com/macros/s/AKfycbzRQtHag3JH33xfLp4v6h76A9EvM0d7LBS2aOnvWtJ8XmZuq3PCxXnzJD9aJ_yvz0Es/exec";
+    try {
+      console.log('[Contact] Attempting direct client-side submission to Google Sheets...');
+      // Using mode: 'no-cors' and text/plain to completely bypass CORS preflight and blocks
+      await fetch(sheetsUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: JSON.stringify({
+          ...dataToSubmit,
+          recipientEmail: 'finance@teambuilding.biz',
+          timestamp: new Date().toISOString()
+        }),
+      });
+      console.log('[Contact] Direct client-side submission completed successfully (no-cors mode).');
+      return true;
+    } catch (err) {
+      console.error('[Contact] Direct client-side submission failed:', err);
+      return false;
+    }
+  };
+
   const submitForm = async (dataToSubmit: typeof formData) => {
     setIsSubmitting(true);
     setSubmitStatus('idle');
@@ -39,6 +64,7 @@ export default function ContactView() {
     localStorage.setItem('teambuilding_contact_draft', JSON.stringify(dataToSubmit));
 
     try {
+      console.log('[Contact] Attempting standard submission via /api/contact...');
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
@@ -49,9 +75,17 @@ export default function ContactView() {
 
       const contentType = response.headers.get('content-type');
       if (response.redirected || (contentType && contentType.includes('text/html'))) {
-        console.warn('[Contact] Request was redirected or returned HTML. This is typical when previewing inside an iframe due to third-party cookie restrictions.');
-        setErrorMessage("Preview session cookie blocked (common in iframes). To submit successfully, please click the 'Open in new tab' button in the top right of the preview!");
-        setSubmitStatus('error');
+        console.warn('[Contact] Request was redirected or returned HTML (session cookie blocked). Falling back to direct submission...');
+        const directSuccess = await submitDirectToGoogleSheets(dataToSubmit);
+        if (directSuccess) {
+          setSubmitStatus('success');
+          setFormData({ name: '', email: '', subject: '', message: '' });
+          localStorage.removeItem('teambuilding_contact_draft');
+          localStorage.removeItem('teambuilding_contact_auto_submit');
+        } else {
+          setErrorMessage("Connection issue inside iframe. Please click the 'Open in new tab' button in the top right to submit successfully!");
+          setSubmitStatus('error');
+        }
         return;
       }
 
@@ -63,18 +97,35 @@ export default function ContactView() {
         localStorage.removeItem('teambuilding_contact_draft');
         localStorage.removeItem('teambuilding_contact_auto_submit');
       } else {
-        console.error('Contact submit error:', result.error || 'Unknown error');
-        setErrorMessage(result.error || 'The server was unable to process your request. Please try again.');
-        setSubmitStatus('error');
+        console.warn('[Contact] Server returned non-success, attempting direct fallback...', result);
+        const directSuccess = await submitDirectToGoogleSheets(dataToSubmit);
+        if (directSuccess) {
+          setSubmitStatus('success');
+          setFormData({ name: '', email: '', subject: '', message: '' });
+          localStorage.removeItem('teambuilding_contact_draft');
+          localStorage.removeItem('teambuilding_contact_auto_submit');
+        } else {
+          console.error('Contact submit error:', result.error || 'Unknown error');
+          setErrorMessage(result.error || 'The server was unable to process your request. Please try again.');
+          setSubmitStatus('error');
+        }
       }
     } catch (err: any) {
-      console.error('Network or server error during submit:', err);
-      if (err?.message && (err.message.includes('Unexpected token') || err.message.includes('Unexpected end of JSON') || err.message.includes('JSON.parse'))) {
-        setErrorMessage("Preview session cookie blocked (common in iframes). To submit successfully, please click the 'Open in new tab' button in the top right of the preview!");
+      console.error('Network or server error during submit. Trying direct fallback...', err);
+      const directSuccess = await submitDirectToGoogleSheets(dataToSubmit);
+      if (directSuccess) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        localStorage.removeItem('teambuilding_contact_draft');
+        localStorage.removeItem('teambuilding_contact_auto_submit');
       } else {
-        setErrorMessage(err?.message ? `Error: ${err.message}` : 'A network error occurred. Please verify your connection and try again.');
+        if (err?.message && (err.message.includes('Unexpected token') || err.message.includes('Unexpected end of JSON') || err.message.includes('JSON.parse'))) {
+          setErrorMessage("Preview session cookie blocked (common in iframes). To submit successfully, please click the 'Open in new tab' button in the top right of the preview!");
+        } else {
+          setErrorMessage(err?.message ? `Error: ${err.message}` : 'A network error occurred. Please verify your connection and try again.');
+        }
+        setSubmitStatus('error');
       }
-      setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
     }

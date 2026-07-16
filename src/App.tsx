@@ -13,6 +13,28 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Home);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Synchronize state with URL hash
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#/', '').replace('#', '');
+      if (hash && Object.values(Page).includes(hash as Page)) {
+        setCurrentPage(hash as Page);
+      } else {
+        // Default to home but set hash if empty
+        if (!window.location.hash) {
+          window.location.hash = `#/${Page.Home}`;
+        }
+        setCurrentPage(Page.Home);
+      }
+    };
+
+    // Run on initial load
+    handleHashChange();
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   // Scroll to top when page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -20,6 +42,7 @@ export default function App() {
   }, [currentPage]);
 
   const handleNavigate = (page: Page) => {
+    window.location.hash = `#/${page}`;
     setCurrentPage(page);
   };
 
