@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Check, AlertCircle, MapPin, Building2, Mail } from 'lucide-react';
 
@@ -30,14 +30,7 @@ export default function ContactView() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      setErrorMessage('Please fill in all required fields before submitting.');
-      setSubmitStatus('error');
-      return;
-    }
-
+  const submitForm = async (dataToSubmit: typeof formData) => {
     setIsSubmitting(true);
     setSubmitStatus('idle');
     setErrorMessage('');
@@ -48,14 +41,26 @@ export default function ContactView() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSubmit),
       });
+
+      // Handle redirect or non-JSON responses from the sandboxed environment (session cookie expiration)
+      const contentType = response.headers.get('content-type');
+      if (response.redirected || (contentType && contentType.includes('text/html'))) {
+        console.warn('[Contact] Session expired, saving draft and reloading to refresh cookie...');
+        localStorage.setItem('teambuilding_contact_draft', JSON.stringify(dataToSubmit));
+        localStorage.setItem('teambuilding_contact_auto_submit', 'true');
+        window.location.reload();
+        return;
+      }
 
       const result = await response.json();
 
       if (response.ok && result.success) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
+        localStorage.removeItem('teambuilding_contact_draft');
+        localStorage.removeItem('teambuilding_contact_auto_submit');
       } else {
         console.error('Contact submit error:', result.error || 'Unknown error');
         setErrorMessage(result.error || 'The server was unable to process your request. Please try again.');
@@ -63,11 +68,53 @@ export default function ContactView() {
       }
     } catch (err: any) {
       console.error('Network or server error during submit:', err);
+      // Catch any indirect JSON parsing failures which indicate redirect HTML was served
+      if (err?.message && (err.message.includes('Unexpected token') || err.message.includes('Unexpected end of JSON'))) {
+        console.warn('[Contact] JSON parse failure, saving draft and reloading...');
+        localStorage.setItem('teambuilding_contact_draft', JSON.stringify(dataToSubmit));
+        localStorage.setItem('teambuilding_contact_auto_submit', 'true');
+        window.location.reload();
+        return;
+      }
       setErrorMessage(err?.message ? `Error: ${err.message}` : 'A network error occurred. Please verify your connection and try again.');
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  useEffect(() => {
+    const draft = localStorage.getItem('teambuilding_contact_draft');
+    const autoSubmit = localStorage.getItem('teambuilding_contact_auto_submit');
+
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        setFormData(parsed);
+
+        if (autoSubmit === 'true') {
+          localStorage.removeItem('teambuilding_contact_auto_submit');
+          const timer = setTimeout(() => {
+            submitForm(parsed);
+          }, 600);
+          return () => clearTimeout(timer);
+        }
+      } catch (e) {
+        console.error('Error parsing draft:', e);
+        localStorage.removeItem('teambuilding_contact_draft');
+        localStorage.removeItem('teambuilding_contact_auto_submit');
+      }
+    }
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) {
+      setErrorMessage('Please fill in all required fields before submitting.');
+      setSubmitStatus('error');
+      return;
+    }
+    await submitForm(formData);
   };
 
   return (
