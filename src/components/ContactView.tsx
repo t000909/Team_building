@@ -35,6 +35,9 @@ export default function ContactView() {
     setSubmitStatus('idle');
     setErrorMessage('');
 
+    // Save draft in case the request is interrupted or redirected
+    localStorage.setItem('teambuilding_contact_draft', JSON.stringify(dataToSubmit));
+
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
@@ -44,13 +47,11 @@ export default function ContactView() {
         body: JSON.stringify(dataToSubmit),
       });
 
-      // Handle redirect or non-JSON responses from the sandboxed environment (session cookie expiration)
       const contentType = response.headers.get('content-type');
       if (response.redirected || (contentType && contentType.includes('text/html'))) {
-        console.warn('[Contact] Session expired, saving draft and reloading to refresh cookie...');
-        localStorage.setItem('teambuilding_contact_draft', JSON.stringify(dataToSubmit));
-        localStorage.setItem('teambuilding_contact_auto_submit', 'true');
-        window.location.reload();
+        console.warn('[Contact] Request was redirected or returned HTML. This is typical when previewing inside an iframe due to third-party cookie restrictions.');
+        setErrorMessage("Preview session cookie blocked (common in iframes). To submit successfully, please click the 'Open in new tab' button in the top right of the preview!");
+        setSubmitStatus('error');
         return;
       }
 
@@ -68,15 +69,11 @@ export default function ContactView() {
       }
     } catch (err: any) {
       console.error('Network or server error during submit:', err);
-      // Catch any indirect JSON parsing failures which indicate redirect HTML was served
-      if (err?.message && (err.message.includes('Unexpected token') || err.message.includes('Unexpected end of JSON'))) {
-        console.warn('[Contact] JSON parse failure, saving draft and reloading...');
-        localStorage.setItem('teambuilding_contact_draft', JSON.stringify(dataToSubmit));
-        localStorage.setItem('teambuilding_contact_auto_submit', 'true');
-        window.location.reload();
-        return;
+      if (err?.message && (err.message.includes('Unexpected token') || err.message.includes('Unexpected end of JSON') || err.message.includes('JSON.parse'))) {
+        setErrorMessage("Preview session cookie blocked (common in iframes). To submit successfully, please click the 'Open in new tab' button in the top right of the preview!");
+      } else {
+        setErrorMessage(err?.message ? `Error: ${err.message}` : 'A network error occurred. Please verify your connection and try again.');
       }
-      setErrorMessage(err?.message ? `Error: ${err.message}` : 'A network error occurred. Please verify your connection and try again.');
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -84,25 +81,17 @@ export default function ContactView() {
   };
 
   useEffect(() => {
-    const draft = localStorage.getItem('teambuilding_contact_draft');
-    const autoSubmit = localStorage.getItem('teambuilding_contact_auto_submit');
+    // Clear any stuck auto-submit flag from localStorage to break any previous redirect loops
+    localStorage.removeItem('teambuilding_contact_auto_submit');
 
+    const draft = localStorage.getItem('teambuilding_contact_draft');
     if (draft) {
       try {
         const parsed = JSON.parse(draft);
         setFormData(parsed);
-
-        if (autoSubmit === 'true') {
-          localStorage.removeItem('teambuilding_contact_auto_submit');
-          const timer = setTimeout(() => {
-            submitForm(parsed);
-          }, 600);
-          return () => clearTimeout(timer);
-        }
       } catch (e) {
         console.error('Error parsing draft:', e);
         localStorage.removeItem('teambuilding_contact_draft');
-        localStorage.removeItem('teambuilding_contact_auto_submit');
       }
     }
   }, []);
@@ -139,110 +128,145 @@ export default function ContactView() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-4">
           
           {/* Portal Message Form */}
-          <motion.div variants={itemVariants} className="lg:col-span-7 bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900 font-sans tracking-tight">
-              Get in touch
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="space-y-1.5">
-                  <label htmlFor="name" className="text-xs font-semibold text-slate-700 font-sans">
-                    Your Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Enter your name"
-                    className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50"
-                  />
-                </div>
+          <motion.div 
+            variants={itemVariants} 
+            className="lg:col-span-7 bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm min-h-[490px] flex flex-col justify-center"
+          >
+            <AnimatePresence mode="wait">
+              {submitStatus === 'success' ? (
+                <motion.div
+                  key="success-card"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-center py-8 px-4 space-y-6 my-auto"
+                >
+                  <div className="mx-auto w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center shadow-inner">
+                    <Check className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold text-slate-900 font-sans tracking-tight">
+                      Message Sent Successfully!
+                    </h3>
+                    <p className="text-slate-600 font-sans font-light leading-relaxed max-w-md mx-auto text-base">
+                      Thanks for your inquiry! We've successfully received your details and our team will contact you soon.
+                    </p>
+                    <p className="text-xs text-slate-400 font-sans font-light max-w-sm mx-auto">
+                      A confirmation has been logged to our systems. We typically respond within 1 business day.
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                    <button
+                      onClick={() => setSubmitStatus('idle')}
+                      className="inline-flex items-center justify-center px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-semibold text-sm rounded-lg transition-colors duration-150 cursor-pointer"
+                    >
+                      Send another message
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="form-card"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-2xl font-bold text-slate-900 font-sans tracking-tight">
+                    Get in touch
+                  </h2>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <label htmlFor="name" className="text-xs font-semibold text-slate-700 font-sans">
+                          Your Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="name"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="Enter your name"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50"
+                        />
+                      </div>
 
-                <div className="space-y-1.5">
-                  <label htmlFor="email" className="text-xs font-semibold text-slate-700 font-sans">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Enter your email"
-                    className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50"
-                  />
-                </div>
-              </div>
+                      <div className="space-y-1.5">
+                        <label htmlFor="email" className="text-xs font-semibold text-slate-700 font-sans">
+                          Email Address <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          id="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="Enter your email"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50"
+                        />
+                      </div>
+                    </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="subject" className="text-xs font-semibold text-slate-700 font-sans">
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  placeholder="How can we help you?"
-                  className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50"
-                />
-              </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="subject" className="text-xs font-semibold text-slate-700 font-sans">
+                        Subject
+                      </label>
+                      <input
+                        type="text"
+                        id="subject"
+                        value={formData.subject}
+                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                        placeholder="How can we help you?"
+                        className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50"
+                      />
+                    </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="message" className="text-xs font-semibold text-slate-700 font-sans">
-                  Message Details <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="message"
-                  required
-                  rows={5}
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder="Tell us about your project requirements..."
-                  className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50 resize-none"
-                />
-              </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="message" className="text-xs font-semibold text-slate-700 font-sans">
+                        Message Details <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        id="message"
+                        required
+                        rows={5}
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        placeholder="Tell us about your project requirements..."
+                        className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm font-sans placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-200 bg-slate-50/50 resize-none"
+                      />
+                    </div>
 
-              {/* Status Feedbacks */}
-              <AnimatePresence mode="wait">
-                {submitStatus === 'success' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-lg text-sm flex items-center gap-3 font-sans"
-                  >
-                    <Check className="w-5 h-5 text-emerald-600 shrink-0" />
-                    <span>Your message has been sent successfully! Our team will get back to you soon.</span>
-                  </motion.div>
-                )}
+                    {/* Status Feedbacks */}
+                    <AnimatePresence mode="wait">
+                      {submitStatus === 'error' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="p-4 bg-red-50 border border-red-100 text-red-800 rounded-lg text-sm flex items-center gap-3 font-sans"
+                        >
+                          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+                          <span>{errorMessage || 'An error occurred. Please try again.'}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-                {submitStatus === 'error' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-4 bg-red-50 border border-red-100 text-red-800 rounded-lg text-sm flex items-center gap-3 font-sans"
-                  >
-                    <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                    <span>{errorMessage || 'An error occurred. Please try again.'}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full group inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-sans font-semibold py-3.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-sm cursor-pointer"
-              >
-                {isSubmitting ? 'Sending Message...' : 'Send Message'}
-                <Send className={`w-4 h-4 transition-transform ${isSubmitting ? 'translate-x-1 translate-y-[-2px]' : 'group-hover:translate-x-0.5'}`} />
-              </button>
-            </form>
+                    {/* Submit button */}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full group inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-sans font-semibold py-3.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-sm cursor-pointer"
+                    >
+                      {isSubmitting ? 'Sending Message...' : 'Send Message'}
+                      <Send className={`w-4 h-4 transition-transform ${isSubmitting ? 'translate-x-1 translate-y-[-2px]' : 'group-hover:translate-x-0.5'}`} />
+                    </button>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Contact & Corporate Info Column */}
